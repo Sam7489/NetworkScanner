@@ -1,0 +1,65 @@
+#!/home/sam/ssd/projects/network-scanner/venv/bin/python
+
+
+import nmap
+from prettytable import PrettyTable
+from mac_vendor_lookup import MacLookup
+import socket
+from termcolor import colored
+
+def get_devices(subnet):
+    nm = nmap.PortScanner()
+    nm.scan(hosts=subnet, arguments="-sn")
+
+    table = PrettyTable()
+    table.field_names = ["🏷 HOSTNAME", "🌐 IP", "🔢 MAC", "🏭 VENDOR"]
+    table.align = "c"
+
+    mac_lookup = MacLookup()
+    mac_lookup.load_vendors()
+
+    for host in nm.all_hosts():
+        ip = colored(host, "cyan")
+        hostname = nm[host].hostname() or "Unknown"
+
+        # Try reverse DNS for better hostname
+        if hostname == "Unknown":
+            try:
+                hostname = socket.gethostbyaddr(host)[0]
+            except:
+                pass
+
+        mac = nm[host]['addresses'].get('mac', 'Unknown')
+        if mac != 'Unknown':
+            try:
+                vendor = mac_lookup.lookup(mac)
+            except:
+                vendor = "Unknown"
+        else:
+            vendor = "Unknown"
+
+        # Emoji for device type
+        if "phone" in hostname.lower() or "oppo" in hostname.lower() or "android" in vendor.lower():
+            icon = "📱"
+        elif "pc" in hostname.lower() or "laptop" in hostname.lower() or "intel" in vendor.lower():
+            icon = "💻"
+        elif "fiber" in hostname.lower() or "router" in vendor.lower() or "fiberhome" in vendor.lower():
+            icon = "📡"
+        elif "tv" in hostname.lower() or "box" in hostname.lower():
+            icon = "📺"
+        else:
+            icon = "🖥"
+
+        hostname = colored(f"{icon} {hostname}", "green")
+        mac = colored(mac, "yellow")
+        vendor = colored(vendor, "magenta")
+
+        table.add_row([hostname, ip, mac, vendor])
+
+    
+    print(colored("\n📍 Network Devices Found\n", "blue", attrs=["bold"]))
+    print(table)
+
+if __name__ == "__main__":
+    subnet = "192.168.31.0/24"  # Change if needed
+    get_devices(subnet)
