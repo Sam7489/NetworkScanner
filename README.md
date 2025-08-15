@@ -30,5 +30,10 @@ sudo ./setup.sh
 ```
 
 to run the script:
-  netscan
-  preffered: sudo netscan
+   sudo netscan
+
+### sample output
+IP Address       MAC Address
+192.168.1.1      00:11:22:33:44:55
+192.168.1.101    66:77:88:99:AA:BB
+
